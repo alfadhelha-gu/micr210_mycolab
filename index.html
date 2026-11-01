@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ImmunoLab VR - Clinical Mycology</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = { 
+      theme: { 
+        extend: { 
+          fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'] },
+          colors: { apple: { bg: '#f5f5f7', card: '#ffffff', blue: '#0071e3', text: '#1d1d1f', sec: '#86868b' } } 
+        } 
+      } 
+    }
+  </script>
+  <style>
+    body { background-color: #f5f5f7; color: #1d1d1f; overflow-x: hidden; -webkit-font-smoothing: antialiased; user-select: none; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 4px; }
+
+    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); }
+    .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    
+    .apple-input { background: #f5f5f7; border: 1px solid transparent; border-radius: 12px; padding: 12px 16px; color: #1d1d1f; outline: none; transition: all 0.2s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+    .apple-input:focus { background: #ffffff; border-color: #0071e3; box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15); }
+    .apple-btn { background: #0071e3; color: white; border-radius: 999px; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .apple-btn:hover { background: #0077ed; transform: scale(1.02); box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4); }
+    .apple-btn:active { transform: scale(0.98); }
+    .apple-btn:disabled { background: #d1d1d6; color: #ffffff; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .apple-slider { -webkit-appearance: none; width: 100%; height: 8px; background: #d1d1d6; border-radius: 4px; outline: none; }
+    .apple-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #ffffff; border: 1px solid #c7c7cc; box-shadow: 0 2px 8px rgba(0,0,0,0.25); cursor: pointer; transition: transform 0.1s; }
+    .apple-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
+    
+    .temp-slider { -webkit-appearance: none; width: 100%; height: 12px; border-radius: 6px; outline: none; background: linear-gradient(to right, #3b82f6 0%, #a855f7 50%, #f97316 100%); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+    .temp-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 32px; height: 32px; border-radius: 50%; background: #ffffff; border: 2px solid #e5e5ea; box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer; transition: transform 0.1s; }
+    .temp-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
+
+    @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 15px rgba(0, 113, 227, 0.15); } 50% { box-shadow: 0 0 25px rgba(0, 113, 227, 0.5); } }
+    .drop-target-active { border: 2px dashed #0071e3 !important; animation: pulseGlow 1.5s infinite; background-color: rgba(0, 113, 227, 0.05) !important; cursor: crosshair; }
+
+    .equip-btn.active-tool { border-color: #0071e3; background-color: rgba(0, 113, 227, 0.05); box-shadow: inset 0 0 0 1.5px #0071e3; }
+    .reagent-vial { position: relative; width: 44px; height: 60px; border-radius: 6px 6px 14px 14px; background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,240,245,1) 50%, rgba(0,0,0,0.05) 100%); border: 2px solid rgba(0,0,0,0.1); box-shadow: inset -2px -2px 6px rgba(0,0,0,0.08), 3px 6px 12px rgba(0,0,0,0.08); cursor: pointer; overflow: hidden; transition: all 0.2s; }
+    .vial-liquid { position: absolute; bottom: 0; width: 100%; transition: height 0.3s; z-index: 0; opacity: 0.9; }
+    .slide-in-bench { width: 180px; height: 60px; background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 3px; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.15); overflow: hidden; backdrop-filter: blur(4px); }
+    .glass-slide-frosted { position: absolute; left: 0; top: 0; bottom: 0; width: 35px; background: rgba(255,255,255,0.95); border-right: 1px solid rgba(0,0,0,0.2); }
+    
+    @keyframes dropFall { 0% { top: 0px; opacity: 1; transform: scaleY(1.5); } 80% { top: 40px; opacity: 1; transform: scaleY(1); } 100% { top: 45px; opacity: 0; transform: scale(2); } }
+    .anim-drop { animation: dropFall 0.3s ease-in forwards; }
+    
+    #cursor-item { position: fixed; pointer-events: none; z-index: 9999; display: none; filter: drop-shadow(4px 8px 12px rgba(0,0,0,0.3)); }
+    .blur-transition { transition: filter 0.1s ease-out; }
+    .ref-scroll::-webkit-scrollbar { width: 4px; }
+    .ref-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .mold-texture { filter: url(#fuzzy-mold); }
+    .yeast-texture { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+
+    @media print {
+      @page { margin: 12mm; size: A4; }
+      html, body { background: white !important; color: #1d1d1f !important; margin: 0; padding: 0; }
+      #app-wrapper, #toast-container, #cursor-item, .modal-overlay { display: none !important; }
+      #print-report { display: block !important; width: 100%; max-width: 1000px; margin: 0 auto; }
+      .print-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0071e3; padding-bottom: 20px; margin-bottom: 30px; }
+      .print-section { margin-bottom: 35px; page-break-inside: avoid; }
+      .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+      .print-table th, .print-table td { padding: 10px; border: 1px solid #e2e8f0; text-align: left; font-size: 13px; }
+      .print-table th { background-color: #f8fafc; font-weight: 600; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  
+  <!-- SVG Filters for Macroscopic Rendering -->
+  <svg width="0" height="0" class="absolute pointer-events-none">
+    <filter id="fuzzy-mold" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G" />
+      <feGaussianBlur stdDeviation="1.5" />
+    </filter>
+  </svg>
+
+  <div id="cursor-item"></div>
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+  <!-- STARTUP MODAL -->
+  <div id="protocol-modal" class="modal-overlay fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div class="bg-white border border-gray-200 rounded-[24px] max-w-2xl w-full p-8 shadow-2xl flex flex-col gap-5 fade-in">
+      <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
+        <div class="w-12 h-12 rounded-xl bg-[#f0f9ff] flex items-center justify-center border border-[#bae6fd]">
+          <i class="fa-solid fa-microscope text-[#0071e3] text-xl"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-apple-text tracking-tight">Clinical Mycology Simulator</h2>
+          <p class="text-[13px] text-apple-sec">Phase 1: Fungal Staining & Pathogenesis Diagnostics</p>
+        </div>
+      </div>
+      
+      <p class="text-[14px] text-apple-text leading-relaxed bg-[#f5f5f7] p-4 rounded-xl border border-gray-200">
+        <strong class="text-[#0071e3] block mb-1">Laboratory Protocol:</strong>
+        Observe macroscopic fungal colonies, execute wet mounts and negative stains, and identify thermal dimorphism and microscopic morphology. Fungi enter the body mainly via respiratory, mucous, and cutaneous routes.
+      </p>
+      
+      <p class="font-bold text-apple-text mt-2">Select a training protocol to begin:</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button onclick="startPracticePhase('p1')" class="bg-white border-2 border-gray-200 hover:border-[#0071e3] hover:bg-[#f0f9ff] rounded-xl p-4 text-left transition group shadow-sm">
+          <span class="block font-bold text-apple-text group-hover:text-[#0071e3]">Protocol A</span>
+          <span class="text-[11px] text-apple-sec block mt-1 font-mono">Thermal Dimorphism & LPCB Wet Mount</span>
+        </button>
+        <button onclick="startPracticePhase('p2')" class="bg-white border-2 border-gray-200 hover:border-[#0071e3] hover:bg-[#f0f9ff] rounded-xl p-4 text-left transition group shadow-sm">
+          <span class="block font-bold text-apple-text group-hover:text-[#0071e3]">Protocol B</span>
+          <span class="text-[11px] text-apple-sec block mt-1 font-mono">India Ink Negative Stain (CSF)</span>
+        </button>
+      </div>
+      
+      <div class="pt-6 mt-2 border-t border-gray-100 flex justify-between items-center">
+        <span class="text-apple-sec text-[12px] font-medium">Already proficient?</span>
+        <button onclick="startExamPrompt()" class="bg-[#1d1d1f] hover:bg-[#333336] text-white px-6 py-2.5 rounded-full text-[13px] font-bold shadow-md transition flex items-center gap-2">
+          <span>Skip to Official Assessment</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPLETION MODAL -->
+  <div id="completion-modal" class="modal-overlay fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-4">
+    <div class="bg-white border border-gray-200 rounded-[24px] max-w-md w-full p-8 shadow-2xl flex flex-col items-center text-center gap-4 fade-in">
+      <div class="w-16 h-16 rounded-full bg-[#f0fdf4] border border-[#bbf7d0] flex items-center justify-center text-[#166534] text-3xl shadow-inner">
+        <i class="fa-solid fa-check-double"></i>
+      </div>
+      <h2 class="text-xl font-bold text-apple-text" id="comp-modal-title">Module Complete</h2>
+      <p class="text-[14px] text-apple-sec mb-4" id="comp-modal-desc">All required structures have been accurately identified.</p>
+      <div id="comp-modal-actions" class="w-full flex flex-col gap-3">
+        <!-- Injected Actions -->
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN MODAL -->
+  <div id="briefing-modal" class="modal-overlay fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-4">
+    <div class="bg-white border border-gray-200 rounded-[24px] max-w-md w-full p-8 shadow-2xl flex flex-col gap-5 fade-in">
+      <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
+        <div class="w-12 h-12 rounded-xl bg-[#f0fdf4] flex items-center justify-center border border-[#bbf7d0]">
+          <i class="fa-solid fa-clipboard-user text-[#166534] text-xl"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-apple-text tracking-tight">Technologist Login</h2>
+          <p class="text-[13px] text-apple-sec">MICR 210 Official Assessment</p>
+        </div>
+      </div>
+      <p class="text-[14px] text-apple-text">Enter your credentials to begin the practical workflow assessment and independent unknowns analysis.</p>
+      <div class="space-y-3 mt-2">
+        <input type="text" id="stu-name" placeholder="Full Name" class="apple-input w-full font-bold">
+        <input type="text" id="stu-id" placeholder="Student ID" class="apple-input w-full font-mono">
+      </div>
+      <button onclick="loginStudent()" class="apple-btn w-full py-3.5 text-[14px] mt-2">Begin Assessment</button>
+    </div>
+  </div>
+
+  <div id="app-wrapper" class="flex-1 flex flex-col hidden opacity-0 transition-opacity duration-500 relative z-10">
+    
+    <header class="glass-panel sticky top-0 z-40 border-b border-gray-200/50">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="h-10 w-10 rounded-[10px] bg-[#1c1c1e] border border-[#2c2c2e] flex items-center justify-center shadow-md">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <polygon points="12,2 22,7.5 22,18.5 12,24 2,18.5 2,7.5" fill="#0071e3"/>
+              <polygon points="12,2 22,7.5 12,12" fill="rgba(255,255,255,0.4)"/>
+              <polygon points="2,7.5 12,2 12,12" fill="rgba(255,255,255,0.2)"/>
+              <polygon points="12,24 22,18.5 12,12" fill="rgba(0,0,0,0.2)"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-[19px] font-bold text-apple-text tracking-tight">MycoLab <span class="text-[#0071e3] font-mono text-[10px] ml-1 px-2 py-0.5 bg-[#0071e3]/10 rounded-full">MICR 210</span></h1>
+            <p class="text-[11px] text-apple-sec font-medium">Fungal Staining & Pathogenesis Diagnostics</p>
+          </div>
+        </div>
+        <div class="flex gap-4 items-center">
+          <button onclick="resetCurrentProtocol()" class="text-[12px] font-bold text-[#ff3b30] hover:bg-[#ff3b30]/10 px-4 py-2 rounded-full transition border border-[#ff3b30]/30 bg-white shadow-sm flex items-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i> Reset Bench
+          </button>
+          <div class="h-6 w-px bg-gray-300"></div>
+          <div class="flex gap-2 bg-[#e5e5ea]/50 p-1 rounded-full">
+            <div id="nav-1" class="px-5 py-2 rounded-full text-[11px] font-bold bg-[#0071e3] text-white shadow-sm transition">1. GUIDED</div>
+            <div id="nav-2" class="px-5 py-2 rounded-full text-[11px] font-bold text-[#86868b] transition">2. CREDENTIALS</div>
+            <div id="nav-3" class="px-5 py-2 rounded-full text-[11px] font-bold text-[#86868b] transition">3. UNKNOWNS</div>
+            <div id="nav-4" class="px-5 py-2 rounded-full text-[11px] font-bold text-[#86868b] transition">4. REPORT</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div id="guided-bar" class="max-w-7xl mx-auto w-full px-6 mt-6 hidden">
+      <div class="glass-panel rounded-[16px] p-4 shadow-sm flex items-center gap-5 relative overflow-hidden">
+        <div class="w-12 h-12 rounded-full bg-[#0071e3]/10 text-[#0071e3] font-bold flex items-center justify-center font-mono shrink-0 text-lg shadow-inner" id="guide-step-num">1</div>
+        <div class="flex-1">
+          <span class="text-[10px] text-[#0071e3] uppercase font-bold tracking-wider">Protocol Directive Tracker</span>
+          <p id="guide-step-text" class="text-apple-text font-bold text-base mt-0.5">Select the 'Incubator' tab to observe macroscopic morphology.</p>
+        </div>
+      </div>
+    </div>
+
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 py-6 flex flex-col gap-6 relative">
+      
+      <!-- MODULE 1 & 3: BENCHWORK -->
+      <div id="module-bench" class="w-full flex-col hidden fade-in h-full">
+        <nav class="flex p-1 bg-[#e5e5ea]/70 backdrop-blur-md rounded-[14px] w-full max-w-3xl shadow-inner mb-6 relative z-30 mx-auto">
+          <button id="tab-macro" onclick="showBenchTab('macro')" class="flex-1 py-2.5 px-3 rounded-[10px] text-[13px] font-bold bg-white text-apple-text shadow-sm flex justify-center items-center gap-2 transition-all ring-2 ring-amber-400"><i class="fa-solid fa-temperature-half text-[#f97316]"></i> Incubator / Macroscopic</button>
+          <button id="tab-prep" onclick="showBenchTab('prep')" class="flex-1 py-2.5 px-3 rounded-[10px] text-[13px] font-bold text-[#86868b] hover:text-apple-text flex justify-center items-center gap-2 transition-all"><i class="fa-solid fa-droplet text-[#0071e3]"></i> Slide Prep</button>
+          <button id="tab-scope" onclick="showBenchTab('scope')" class="flex-1 py-2.5 px-3 rounded-[10px] text-[13px] font-bold text-[#86868b] hover:text-apple-text flex justify-center items-center gap-2 transition-all"><i class="fa-solid fa-eye text-[#8b5cf6]"></i> Microscope</button>
+        </nav>
+
+        <!-- VIEW: INCUBATOR (MACROSCOPIC) -->
+        <section id="view-macro" class="bench-view flex flex-col lg:flex-row gap-6">
+          <div class="w-full glass-panel rounded-[32px] p-8 sm:p-12 shadow-xl border border-white max-w-5xl mx-auto relative overflow-hidden transition-colors duration-700" id="incubator-bg" style="background-color: rgba(224, 242, 254, 0.4);">
+            
+            <div class="text-center mb-10 relative z-10">
+              <h2 class="text-3xl font-bold text-apple-text mb-2">Thermal Dimorphism Incubator</h2>
+              <p class="text-[15px] text-apple-sec max-w-xl mx-auto">Adjust the environmental temperature to observe the phenotypic phase shift characteristic of true fungal pathogens.</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center justify-center gap-16 relative z-10">
+              
+              <div class="relative w-64 h-64 rounded-full border-[8px] border-white/80 shadow-[inset_0_0_40px_rgba(0,0,0,0.1),_0_20px_40px_rgba(0,0,0,0.15)] bg-amber-50 backdrop-blur-md flex items-center justify-center overflow-hidden" id="petri-dish">
+                  <div id="svg-mold" class="absolute w-full h-full transition-opacity duration-1000 opacity-100 mold-texture"></div>
+                  <div id="svg-yeast" class="absolute w-full h-full transition-opacity duration-1000 opacity-0 yeast-texture"></div>
+              </div>
+
+              <div class="flex flex-col items-center w-full max-w-sm gap-6">
+                  <div class="bg-white/90 border border-white px-8 py-5 rounded-[24px] shadow-sm text-center w-full">
+                      <span class="text-[12px] font-bold text-apple-sec uppercase tracking-widest block mb-2">Temperature</span>
+                      <div class="text-5xl font-bold font-mono tracking-tighter transition-colors duration-300" id="temp-display" style="color: #0ea5e9;">25°C</div>
+                      <div id="phase-label" class="mt-4 text-[14px] font-bold text-sky-700 bg-sky-100 py-1.5 px-4 rounded-full inline-block border border-sky-200">Saprobic (Mycelial) Phase</div>
+                  </div>
+
+                  <input type="range" id="temp-slider" min="20" max="42" value="25" class="temp-slider" oninput="updateTemp(this.value)">
+                  
+                  <div class="flex justify-between w-full text-[12px] font-bold text-apple-sec px-2">
+                      <span>20°C (Ambient)</span>
+                      <span>42°C (Host)</span>
+                  </div>
+              </div>
+
+            </div>
+
+            <div id="macro-blocker" class="absolute inset-0 bg-white/60 backdrop-blur-md z-20 hidden items-center justify-center flex-col gap-3">
+                <i class="fa-solid fa-ban text-4xl text-apple-sec"></i>
+                <p class="text-[15px] font-bold text-apple-sec text-center max-w-sm">This specific pathogen does not exhibit thermal dimorphism. Proceed to slide preparation.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW: SLIDE PREP -->
+        <section id="view-prep" class="bench-view flex-col lg:flex-row gap-6 hidden">
+          <div class="lg:w-1/4 glass-panel rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col gap-4 relative z-20">
+            <div class="flex justify-between items-center border-b border-gray-200/60 pb-3">
+              <h3 class="font-bold text-[11px] text-apple-sec uppercase tracking-wider">Equipment Rack</h3>
+              <button onclick="clearHand()" class="text-[10px] text-[#0071e3] font-semibold hover:bg-[#0071e3]/10 px-2 py-1 rounded transition">Drop [Esc]</button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="equip('slide')" class="equip-btn flex flex-col items-center justify-center p-3 rounded-xl border border-gray-200 bg-[#f5f5f7] transition h-20" data-id="slide">
+                <svg viewBox="0 0 100 50" class="w-14 h-7 mb-2 drop-shadow-sm">
+                  <rect width="90" height="30" y="10" rx="2" fill="rgba(255,255,255,0.9)" stroke="#cbd5e1" stroke-width="2"/>
+                </svg>
+                <span class="text-[10px] font-semibold text-apple-text">Clean Slide</span>
+              </button>
+              <button onclick="equip('coverslip')" class="equip-btn flex flex-col items-center justify-center p-3 rounded-xl border border-gray-200 bg-[#f5f5f7] transition h-20" data-id="coverslip">
+                <div class="w-8 h-8 border border-blue-200 bg-blue-50/50 transform rotate-12 mb-1"></div>
+                <span class="text-[10px] font-semibold text-apple-text">Coverslip</span>
+              </button>
+            </div>
+
+            <button onclick="equip('sample')" class="equip-btn flex items-center justify-center p-3 rounded-xl border border-gray-200 bg-[#fff1f2] hover:border-red-300 transition gap-3" data-id="sample">
+              <i class="fa-solid fa-vial-virus text-red-500 text-xl"></i>
+              <span class="text-[11px] font-semibold text-red-900" id="lbl-sample-type">Patient Specimen</span>
+            </button>
+            
+            <div class="flex gap-3 justify-center mt-2 border-t border-gray-200/60 pt-4" id="reagent-rack">
+              <div class="flex flex-col items-center gap-2 reagent-item"><div class="reagent-vial" onclick="equip('ink')"><div class="vial-liquid bg-[#111827]"></div></div><span class="text-[9px] font-bold text-apple-sec reagent-hint">India Ink</span></div>
+              <div class="flex flex-col items-center gap-2 reagent-item"><div class="reagent-vial" onclick="equip('lpcb')"><div class="vial-liquid bg-[#1e3a8a]"></div></div><span class="text-[9px] font-bold text-apple-sec reagent-hint">LPCB Stain</span></div>
+            </div>
+          </div>
+
+          <div class="lg:w-3/4 glass-panel rounded-[24px] p-6 flex flex-col min-h-[500px] relative z-10">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white/60 p-3 rounded-[12px] border border-gray-200/60 text-[12px] mb-6 shadow-inner gap-4">
+              <div class="flex items-center gap-4">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-hand text-apple-sec"></i> <span id="label-hand" class="text-[#0071e3] font-mono font-bold tracking-wider">Empty</span></span>
+                <span class="w-px h-4 bg-gray-300"></span>
+                <span class="flex items-center gap-2"><i class="fa-regular fa-square text-apple-sec"></i> <span id="label-smear" class="text-[#1d1d1f] font-mono font-bold">None</span></span>
+              </div>
+            </div>
+
+            <div class="flex-1 bg-white/40 rounded-xl border border-dashed border-gray-300 relative flex items-center justify-center p-8">
+              <div id="staining-tray" class="w-[340px] h-[200px] bg-[#f8fafc] rounded-[20px] border-2 border-gray-200 shadow-[inset_0_4px_15px_rgba(0,0,0,0.03)] flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 cursor-pointer hover:border-[#0071e3]" onclick="clickTray()">
+                <div class="absolute top-4 w-full text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none">Preparation Bench</div>
+                <div class="absolute w-full h-2.5 bg-gradient-to-b from-gray-200 to-gray-300 top-20 pointer-events-none shadow-sm border-y border-gray-300"></div>
+                <div class="absolute w-full h-2.5 bg-gradient-to-b from-gray-200 to-gray-300 bottom-20 pointer-events-none shadow-sm border-y border-gray-300"></div>
+
+                <div id="slide-station" class="slide-in-bench hidden items-center justify-center z-10 shadow-lg border border-gray-400 bg-white/80">
+                  <div id="slide-drop-sample" class="absolute w-4 h-4 bg-amber-100/60 border border-amber-200 rounded-full opacity-0 transition-opacity" style="left: 80px;"></div>
+                  <div id="slide-drop-lpcb" class="absolute w-6 h-6 bg-[#1e3a8a] rounded-full opacity-0 transition-opacity mix-blend-multiply blur-[1px]" style="left: 79px;"></div>
+                  <div id="slide-drop-ink" class="absolute w-6 h-6 bg-[#111827] rounded-full opacity-0 transition-opacity mix-blend-multiply blur-[1px]" style="left: 79px;"></div>
+                  <div id="slide-coverslip" class="absolute w-12 h-12 border border-blue-200 bg-blue-50/20 opacity-0 transition-opacity" style="left: 66px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW: MICROSCOPE -->
+        <section id="view-scope" class="bench-view hidden flex-col lg:flex-row gap-6">
+          <div class="lg:w-2/3 glass-panel rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col items-center relative z-20">
+            
+            <div class="w-full flex justify-between items-center mb-6 relative">
+              <h3 class="font-bold text-[18px] text-apple-text z-30 relative px-2">Optical Viewport</h3>
+              
+              <div class="flex items-center gap-3 relative z-40">
+                <button onclick="toggleGuide()" class="text-[12px] font-bold text-[#0071e3] bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-full border border-blue-200 transition shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-book-open"></i> Morphology Guide
+                </button>
+              </div>
+            </div>
+            
+            <div class="relative mt-2 w-full flex justify-center">
+              <div class="w-[420px] h-[420px] rounded-full overflow-hidden border-[16px] border-[#1c1c1e] bg-[#e0f2fe] flex items-center justify-center cursor-move shadow-[0_15px_40px_rgba(0,0,0,0.4)] relative z-10 transition-colors duration-1000" id="scope-viewport-bg" style="touch-action: none;">
+                <canvas id="microscope-canvas" width="460" height="460" class="blur-transition opacity-0 transition-opacity duration-700"></canvas>
+                <div class="absolute inset-0 pointer-events-none opacity-20 mix-blend-difference"><div class="w-full h-[1px] bg-white absolute top-1/2"></div><div class="h-full w-[1px] bg-white absolute left-1/2"></div></div>
+                <div class="absolute inset-0 pointer-events-none rounded-full shadow-[inset_0_0_100px_rgba(0,0,0,0.95)]"></div>
+              </div>
+              
+              <div id="morph-guide" class="absolute right-0 top-0 bottom-0 w-64 bg-white/95 backdrop-blur-xl border border-gray-200 rounded-xl shadow-2xl p-4 hidden flex-col z-50">
+                <div class="flex justify-between items-center mb-3 border-b border-gray-200/80 pb-2">
+                    <h4 class="text-[12px] font-bold text-apple-sec uppercase tracking-wider">Morphology Guide</h4>
+                    <button onclick="toggleGuide()" class="text-gray-400 hover:text-red-500 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="overflow-y-auto flex-1 ref-scroll pr-1 space-y-5">
+                  <div>
+                    <span class="text-[12px] font-bold text-[#0071e3] block mb-1">Septate Hyphae (Mold)</span>
+                    <span class="text-[11px] text-apple-sec leading-tight block">Filamentous branching tubes containing distinct cross-walls (septa) with pores.</span>
+                  </div>
+                  <div>
+                    <span class="text-[12px] font-bold text-[#0071e3] block mb-1">Nonseptate Hyphae (Mold)</span>
+                    <span class="text-[11px] text-apple-sec leading-tight block">Continuous, broad filamentous tubes lacking cross-walls.</span>
+                  </div>
+                  <div>
+                    <span class="text-[12px] font-bold text-[#0071e3] block mb-1">Budding Yeast</span>
+                    <span class="text-[11px] text-apple-sec leading-tight block">Single spherical/oval cells exhibiting budding reproduction.</span>
+                  </div>
+                  <div>
+                    <span class="text-[12px] font-bold text-[#0071e3] block mb-1">Pseudohyphae</span>
+                    <span class="text-[11px] text-apple-sec leading-tight block">Chains of elongated yeast cells that remain attached after budding, mimicking hyphae.</span>
+                  </div>
+                  <div class="p-2 bg-gray-900 rounded-lg">
+                    <span class="text-[12px] font-bold text-white block mb-1">Cryptococcus neoformans</span>
+                    <span class="text-[11px] text-gray-300 leading-tight block">Spherical yeast cell surrounded by a thick, clear capsular halo visible against a dark India Ink background.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="micro-result-eval" class="mt-6 w-full max-w-lg p-5 rounded-xl hidden text-[13px] text-center border shadow-sm transition-all flex-col"></div>
+          </div>
+
+          <div class="lg:w-1/3 flex flex-col gap-6">
+            <div class="glass-panel rounded-[24px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+              <h3 class="font-bold text-[12px] text-apple-sec uppercase tracking-wider mb-5 border-b border-gray-200/60 pb-3">Optics Control</h3>
+              
+              <div class="space-y-6">
+                <div>
+                  <span class="text-[12px] font-bold text-apple-text block mb-3">Objective Lens</span>
+                  <div class="flex gap-2 p-1.5 bg-[#e5e5ea]/50 rounded-xl">
+                    <button onclick="setLens(10)" class="lens-btn flex-1 py-2 text-[12px] font-bold rounded-lg transition bg-white text-apple-text shadow-sm border border-gray-300" data-mag="10">10x</button>
+                    <button onclick="setLens(40)" class="lens-btn flex-1 py-2 text-[12px] font-bold rounded-lg transition text-[#86868b] hover:text-apple-text border border-transparent" data-mag="40">40x</button>
+                    <button onclick="setLens(100)" class="lens-btn flex-1 py-2 text-[12px] font-bold rounded-lg transition text-[#86868b] hover:text-apple-text border border-transparent" data-mag="100">100x Oil</button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between items-center mb-3">
+                    <span class="text-[12px] font-bold text-apple-text">Immersion Oil</span>
+                    <span id="oil-status-badge" class="font-mono text-[#ff3b30] font-bold text-[10px] bg-[#ff3b30]/10 px-2 py-1 rounded">Dry Lens</span>
+                  </div>
+                  <button onclick="applyOil()" class="w-full bg-white/80 border border-gray-300 hover:border-[#0071e3] text-[#1d1d1f] font-bold py-2.5 rounded-xl transition text-[13px] shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-eye-dropper text-[#0071e3]"></i> Apply 1 Drop
+                  </button>
+                </div>
+                
+                <div>
+                  <div class="flex justify-between items-center mb-2"><span class="text-[11px] font-bold text-apple-sec uppercase tracking-wider">Coarse Focus</span></div>
+                  <input id="micro-coarse-slider" type="range" min="0" max="100" value="10" class="apple-slider">
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-2"><span class="text-[11px] font-bold text-apple-sec uppercase tracking-wider">Fine Focus</span></div>
+                  <input id="micro-fine-slider" type="range" min="0" max="100" value="85" class="apple-slider">
+                </div>
+              </div>
+
+              <div id="scope-submit-area" class="mt-8 hidden pt-6 border-t border-gray-200/60">
+                <label class="block text-[13px] font-bold text-apple-text mb-3">Morphological Identification:</label>
+                <select id="sel-fungi-type" class="apple-input w-full font-bold text-[13px] mb-4">
+                    <option value="">-- Select Structure --</option>
+                    <option value="septate">Septate Hyphae</option>
+                    <option value="nonseptate">Nonseptate Hyphae</option>
+                    <option value="budding">Budding Yeast</option>
+                    <option value="pseudohyphae">Pseudohyphae</option>
+                    <option value="crypto">Cryptococcus neoformans</option>
+                </select>
+                <button id="btn-fungi-log" onclick="verifyFungi()" class="apple-btn w-full py-3.5 text-[14px]">
+                  Submit Diagnosis
+                </button>
+                <div id="scope-success-area" class="hidden mt-4"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- MODULE 2: PRACTICAL WORKFLOW QUIZ -->
+      <div id="module-quiz" class="hidden w-full max-w-4xl mx-auto flex-col gap-6 fade-in">
+        <div class="glass-panel rounded-[32px] p-8 sm:p-10 shadow-xl border border-white">
+          <h2 class="text-2xl font-bold text-apple-text border-b border-gray-200/60 pb-4 mb-8">Phase 2: Protocol Workflow Assessment</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-[13px]">
+            <div class="bg-white/60 p-6 rounded-[20px] border border-white shadow-sm flex flex-col justify-between hover:shadow-md transition">
+              <p class="font-bold mb-4 text-apple-text text-[14px] leading-relaxed">1. At what specific temperature incubator condition does a true fungal pathogen typically demonstrate the parasitic yeast phase?</p>
+              <div>
+                <label class="flex items-start gap-3 mb-3 cursor-pointer"><input type="radio" name="q1" value="a" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">Lower temperatures (<30°C).</span></label>
+                <label class="flex items-start gap-3 cursor-pointer"><input type="radio" name="q1" value="b" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">Body temperature (35°C–40°C).</span></label>
+              </div>
+            </div>
+            
+            <div class="bg-white/60 p-6 rounded-[20px] border border-white shadow-sm flex flex-col justify-between hover:shadow-md transition">
+              <p class="font-bold mb-4 text-apple-text text-[14px] leading-relaxed">2. What is the explicit diagnostic purpose of applying India ink to a spinal fluid specimen?</p>
+              <div>
+                <label class="flex items-start gap-3 mb-3 cursor-pointer"><input type="radio" name="q2" value="a" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">To selectively stain the fungal cell wall blue.</span></label>
+                <label class="flex items-start gap-3 cursor-pointer"><input type="radio" name="q2" value="b" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">To reveal the thick capsule of Cryptococcus neoformans as a clear halo against a dark background.</span></label>
+              </div>
+            </div>
+            
+            <div class="bg-white/60 p-6 rounded-[20px] border border-white shadow-sm flex flex-col justify-between hover:shadow-md transition">
+              <p class="font-bold mb-4 text-apple-text text-[14px] leading-relaxed">3. How do macroscopic yeast colonies differ visually from mold colonies on culture plates?</p>
+              <div>
+                <label class="flex items-start gap-3 mb-3 cursor-pointer"><input type="radio" name="q3" value="a" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">Yeast colonies are smooth and localized; molds are widespread and fuzzy.</span></label>
+                <label class="flex items-start gap-3 cursor-pointer"><input type="radio" name="q3" value="b" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">Yeast colonies are fuzzy mycelia; molds are smooth and localized.</span></label>
+              </div>
+            </div>
+
+            <div class="bg-white/60 p-6 rounded-[20px] border border-white shadow-sm flex flex-col justify-between hover:shadow-md transition">
+              <p class="font-bold mb-4 text-apple-text text-[14px] leading-relaxed">4. Which morphological feature distinguishes septate hyphae from nonseptate hyphae?</p>
+              <div>
+                <label class="flex items-start gap-3 mb-3 cursor-pointer"><input type="radio" name="q4" value="a" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">Septate hyphae lack any internal divisions.</span></label>
+                <label class="flex items-start gap-3 cursor-pointer"><input type="radio" name="q4" value="b" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">Septate hyphae contain distinct cross-walls with pores.</span></label>
+              </div>
+            </div>
+
+            <div class="bg-white/60 p-6 rounded-[20px] border border-white shadow-sm flex flex-col justify-between hover:shadow-md transition">
+              <p class="font-bold mb-4 text-apple-text text-[14px] leading-relaxed">5. Which objective lens strictly requires the application of immersion oil for optimal resolution?</p>
+              <div>
+                <label class="flex items-start gap-3 mb-3 cursor-pointer"><input type="radio" name="q5" value="a" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">100x Objective.</span></label>
+                <label class="flex items-start gap-3 cursor-pointer"><input type="radio" name="q5" value="b" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">40x Objective.</span></label>
+              </div>
+            </div>
+
+            <div class="bg-white/60 p-6 rounded-[20px] border border-white shadow-sm flex flex-col justify-between hover:shadow-md transition">
+              <p class="font-bold mb-4 text-apple-text text-[14px] leading-relaxed">6. What microscopic structure defines pseudohyphae?</p>
+              <div>
+                <label class="flex items-start gap-3 mb-3 cursor-pointer"><input type="radio" name="q6" value="a" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">True branching mycelial filaments originating from spores.</span></label>
+                <label class="flex items-start gap-3 cursor-pointer"><input type="radio" name="q6" value="b" class="mt-1 w-4 h-4 accent-[#0071e3]"> <span class="leading-relaxed">Chains of elongated yeast cells remaining attached after budding reproduction.</span></label>
+              </div>
+            </div>
+          </div>
+          
+          <button onclick="submitQuiz()" class="apple-btn w-full py-4 mt-10 text-[15px] shadow-lg">Submit & Initialize Unknowns Hub</button>
+        </div>
+      </div>
+
+      <!-- MODULE 3: UNKNOWNS HUB -->
+      <div id="module-unknowns-hub" class="hidden w-full max-w-3xl mx-auto flex-col gap-6 fade-in h-full justify-center">
+        <div class="glass-panel rounded-[40px] p-10 sm:p-16 shadow-2xl border border-white text-center relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 z-0"></div>
+          <div class="relative z-10">
+              <div class="w-24 h-24 rounded-2xl bg-white flex items-center justify-center mx-auto mb-8 shadow-md border border-gray-100 transform rotate-3">
+                <i class="fa-solid fa-user-injured text-4xl text-[#0071e3] -rotate-3"></i>
+              </div>
+              <h2 class="text-3xl font-bold text-apple-text mb-4">Independent Diagnostic Practicum</h2>
+              <p class="text-[15px] text-apple-sec mb-10 leading-relaxed max-w-lg mx-auto">Process the clinical cases below. Perform the required stain protocol, evaluate microscopically, and log your diagnosis. Instructor guidance is disabled.</p>
+              
+              <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <button id="btn-u1" onclick="startUnknown('u1')" class="apple-btn px-8 py-4 flex items-center justify-center gap-3 text-[15px] shadow-lg"><i class="fa-solid fa-vial"></i> Load Patient A</button>
+                <button id="btn-u2" onclick="startUnknown('u2')" class="bg-gray-100 text-gray-400 font-bold px-8 py-4 rounded-full flex items-center justify-center gap-3 cursor-not-allowed text-[15px] border border-gray-200" disabled><i class="fa-solid fa-lock"></i> Load Patient B</button>
+              </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE 4: REPORT -->
+      <div id="module-report" class="hidden w-full max-w-4xl mx-auto glass-panel rounded-[32px] p-6 sm:p-10 shadow-xl fade-in my-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-gray-200 pb-5 mb-8 gap-4">
+          <div>
+            <h2 class="text-3xl font-bold text-apple-text mb-1">Final LIMS Report</h2>
+            <p class="text-[13px] text-apple-sec font-medium">Respiratory Therapy Department | MICR 210 Clinical Immunology</p>
+            <p class="text-[13px] text-apple-sec mt-1">Course Instructor: Dr. Hassan Al Fadhel</p>
+          </div>
+          <button onclick="window.print()" class="apple-btn px-6 py-2.5 text-[14px] flex items-center gap-2 shadow-sm"><i class="fa-solid fa-print"></i> Print PDF</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+          <div class="bg-white/60 p-5 rounded-[20px] border border-white shadow-sm print-section">
+            <h3 class="text-[11px] font-bold text-apple-sec uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Technologist Profile</h3>
+            <p class="text-[14px] text-apple-text mb-2"><strong>Name:</strong> <span id="rep-name-out"></span></p>
+            <p class="text-[14px] text-apple-text mb-2"><strong>ID:</strong> <span id="rep-id-out" class="font-mono"></span></p>
+            <p class="text-[14px] text-apple-text"><strong>Workflow Score:</strong> <span id="rep-quiz-out" class="font-bold text-[#0071e3]"></span></p>
+          </div>
+          <div class="bg-white/60 p-5 rounded-[20px] border border-white shadow-sm print-section">
+            <h3 class="text-[11px] font-bold text-apple-sec uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Guided Completion</h3>
+            <p class="text-[14px] text-apple-text mb-2 flex justify-between items-center"><strong>Protocol A (Dimorphism):</strong> <span id="rep-g-p1"></span></p>
+            <p class="text-[14px] text-apple-text flex justify-between items-center"><strong>Protocol B (India Ink):</strong> <span id="rep-g-p2"></span></p>
+          </div>
+        </div>
+
+        <h3 class="text-[13px] font-bold text-apple-text uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Protocol Assessment Review</h3>
+        <div id="rep-quiz-details" class="bg-white/80 border border-white rounded-[16px] p-6 shadow-sm mb-10 print-section"></div>
+
+        <h3 class="text-[13px] font-bold text-apple-text uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Independent Unknowns Analysis</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print-section">
+            <div class="border border-white bg-white/60 rounded-[16px] overflow-hidden shadow-sm flex flex-col">
+                <div class="bg-white p-4 border-b border-gray-100 flex justify-between items-center">
+                    <span class="font-mono font-bold text-[#0071e3]">Patient A (LPCB Wet Mount)</span>
+                    <span id="rep-u1-res"></span>
+                </div>
+                <div class="p-5 flex-1 text-[13px]">
+                    <div id="rep-u1-prep"></div>
+                    <div id="rep-u1-id-det"></div>
+                </div>
+            </div>
+
+            <div class="border border-white bg-white/60 rounded-[16px] overflow-hidden shadow-sm flex flex-col">
+                <div class="bg-white p-4 border-b border-gray-100 flex justify-between items-center">
+                    <span class="font-mono font-bold text-[#0071e3]">Patient B (LPCB Wet Mount)</span>
+                    <span id="rep-u2-res"></span>
+                </div>
+                <div class="p-5 flex-1 text-[13px]">
+                    <div id="rep-u2-prep"></div>
+                    <div id="rep-u2-id-det"></div>
+                </div>
+            </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Print Layout -->
+  <div id="print-report" class="hidden">
+    <div class="print-header">
+      <div>
+        <h1>Mohammad Al-Mana College for Medical Sciences</h1>
+        <h2 style="color: #0071e3; margin-top: 5px; margin-bottom: 5px;">MICR 210: Fungal Staining & Pathogenesis</h2>
+        <h3 style="color: #64748b; font-size: 14px; font-weight: normal;">Course Instructor: Dr. Hassan Al Fadhel</h3>
+      </div>
+      <div style="text-align: right; font-size: 12px; color: #64748b; font-family: monospace;" id="print-date"></div>
+    </div>
+    <div class="print-section">
+      <h3>Technologist Profile</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+        <div><span style="font-size:10px; color:#64748b; text-transform:uppercase; font-weight:bold;">Name</span><br><strong style="font-size:14px;" id="p-name"></strong></div>
+        <div><span style="font-size:10px; color:#64748b; text-transform:uppercase; font-weight:bold;">ID</span><br><strong style="font-size:14px; font-family:monospace;" id="p-id"></strong></div>
+        <div><span style="font-size:10px; color:#64748b; text-transform:uppercase; font-weight:bold;">Protocol Assessment</span><br><strong style="font-size:14px; color:#0071e3;" id="p-quiz"></strong></div>
+      </div>
+    </div>
+    
+    <div class="print-section">
+      <h3>Protocol Assessment Review</h3>
+      <div id="print-quiz-details" style="font-size: 12px; border: 1px solid #e2e8f0; padding: 15px; background: #f8fafc;"></div>
+    </div>
+
+    <div class="print-section">
+      <h3>I. Guided Practicum</h3>
+      <table class="print-table"><tr><th width="50%">Protocol A (Dimorphism & Mold)</th><td id="p-g-p1"></td></tr><tr><th>Protocol B (India Ink & Yeast)</th><td id="p-g-p2"></td></tr></table>
+    </div>
+
+    <div class="print-section">
+      <h3>II. Independent Unknowns Analysis</h3>
+      <table class="print-table">
+        <tr><th style="width: 20%;">Isolate</th><th style="width: 35%;">Preparation Protocol</th><th style="width: 35%;">Diagnostic Identification</th><th style="width: 10%; text-align:center;">Final</th></tr>
+        <tr><td style="font-family:monospace; font-weight:bold; color:#0071e3;">Patient A</td><td id="p-u1-prep"></td><td id="p-u1-det"></td><td id="p-u1-res" style="text-align:center; font-weight:bold;"></td></tr>
+        <tr><td style="font-family:monospace; font-weight:bold; color:#0071e3;">Patient B</td><td id="p-u2-prep"></td><td id="p-u2-det"></td><td id="p-u2-res" style="text-align:center; font-weight:bold;"></td></tr>
+      </table>
+    </div>
+
+    <div class="print-section" style="margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-end;">
+      <div>
+        <div style="border-bottom: 1px solid #1d1d1f; width: 300px; margin-bottom: 8px;"></div>
+        <div style="font-size: 12px; font-weight: bold;">Instructor Signature (Dr. Hassan Al Fadhel)</div>
+      </div>
+      <div>
+        <div style="border-bottom: 1px solid #1d1d1f; width: 150px; margin-bottom: 8px;"></div>
+        <div style="font-size: 12px; font-weight: bold;">Date</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const svgSlide = `<svg width="120" height="60" viewBox="0 0 100 40" fill="none" style="transform: rotate(-10deg); filter: drop-shadow(4px 8px 10px rgba(0,0,0,0.15));"><rect width="100" height="30" rx="2" fill="rgba(255,255,255,0.6)" stroke="#cbd5e1" stroke-width="1.5"/><rect width="25" height="30" fill="rgba(255,255,255,0.95)" stroke-right="1px solid #94a3b8"/></svg>`;
+    const svgDropper = (color) => `<svg width="50" height="180" viewBox="0 0 40 160" fill="none" style="transform: rotate(-15deg); transform-origin: bottom center; filter: drop-shadow(4px 8px 10px rgba(0,0,0,0.15));">
+        <path class="plunger-btn" d="M 12 40 C 2 20 8 2 20 2 C 32 2 38 20 28 40 Z" fill="#64748b"/>
+        <path d="M 14 38 L 26 38 L 22 150 L 18 150 Z" fill="rgba(255,255,255,0.6)" stroke="#cbd5e1" stroke-width="1.5"/>
+        <path d="M 16 42 L 20 42 L 19 140 L 18 140 Z" fill="rgba(255,255,255,0.8)"/>
+        <path d="M 15 90 L 25 90 L 21 145 L 19 145 Z" fill="${color}" opacity="0.9"/>
+        <circle cx="20" cy="155" r="4" fill="${color}" class="anim-drop opacity-0"/>
+    </svg>`;
+
+    const UI = {
+      toast: (msg, type = 'info') => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const bg = type === 'error' ? 'bg-[#ff3b30]' : type === 'success' ? 'bg-[#34c759]' : 'bg-[#0071e3]';
+        toast.className = `px-5 py-3 mt-2 rounded-xl text-white text-[14px] font-bold shadow-xl transition-opacity duration-300 opacity-0 ${bg}`;
+        toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-triangle-exclamation' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} mr-2"></i> ${msg}`;
+        container.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.remove('opacity-0'));
+        setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
+      }
+    };
+
+    const TARGETS = {
+      p1: { name: "Protocol A", expectedStain: 'lpcb', expectedId: 'septate' }, 
+      p2: { name: "Protocol B", expectedStain: 'ink', expectedId: 'crypto' }, 
+      u1: { name: "Patient A", expectedStain: 'lpcb', expectedId: 'pseudohyphae' }, 
+      u2: { name: "Patient B", expectedStain: 'lpcb', expectedId: 'nonseptate' } 
+    };
+
+    const ftElement = document.getElementById('cursor-item');
+    
+    let appState = { 
+        isBusy: false, phase: 1, subPhase: 'p1', stuName: '', stuId: '', quizScore: 0, quizAnswers: {}, 
+        guided: { p1Done: false, p2Done: false, completedSteps: new Set() }, 
+        u1: { prepDone: false, idDone: false, prepMethodCorrect: false, idAnsCorrect: false, idSub: null }, 
+        u2: { prepDone: false, idDone: false, prepMethodCorrect: false, idAnsCorrect: false, idSub: null } 
+    };
+    
+    let bench = { tool: null, s: { present: false, sample: false, stain: null, cover: false } };
+    let micro = { mag: 10, focusC: 10, focusF: 85, oil: false };
+    
+    let fungiData = [];
+    let bgFungiData = []; // Z-axis Background objects
+    let inkArtifacts = [];
+    let scopeAnimId = null;
+
+    const getSteps = (phase) => {
+        if (phase === 'p1') {
+            return [
+                { id: 1, tab: 'macro', msg: "Drag the incubator slider to 37°C to observe the yeast phase." },
+                { id: 2, tab: 'macro', msg: "Thermal dimorphism confirmed. Switch to the 'Slide Prep' tab." },
+                { id: 3, tab: 'prep', msg: "Equip 'Clean Slide' and place it onto the Preparation Bench." },
+                { id: 4, tab: 'prep', msg: "Equip 'Patient Specimen' and apply it to the slide." },
+                { id: 5, tab: 'prep', msg: "Equip 'LPCB Stain' and apply 1 drop." },
+                { id: 6, tab: 'prep', msg: "Equip 'Coverslip' and seal the wet mount." },
+                { id: 7, tab: 'scope', msg: "Switch to 'Microscope', apply Oil, and use 100x lens to identify the structure." }
+            ];
+        } else {
+            return [
+                { id: 1, tab: 'prep', msg: "Equip 'Clean Slide' and place it onto the Preparation Bench." },
+                { id: 2, tab: 'prep', msg: "Equip 'Patient CSF' and apply it to the slide." },
+                { id: 3, tab: 'prep', msg: "Equip 'India Ink' and apply 1 drop for negative staining." },
+                { id: 4, tab: 'prep', msg: "Equip 'Coverslip' and seal the slide." },
+                { id: 5, tab: 'scope', msg: "Switch to 'Microscope', apply Oil, and use 100x lens to identify the structure." }
+            ];
+        }
+    };
+    let currentSteps = [];
+
+    window.startPracticePhase = function(phaseId) {
+        appState.subPhase = phaseId;
+        document.getElementById('protocol-modal').classList.add('hidden');
+        document.getElementById('protocol-modal').classList.remove('flex');
+        document.getElementById('completion-modal').classList.add('hidden');
+        document.getElementById('completion-modal').classList.remove('flex');
+        
+        const appWrap = document.getElementById('app-wrapper');
+        appWrap.classList.remove('hidden');
+        appWrap.classList.add('flex');
+        setTimeout(() => appWrap.style.opacity = '1', 50);
+        
+        setPhase(1);
+        resetBench(phaseId);
+    };
+
+    window.startExamPrompt = function() {
+        document.getElementById('protocol-modal').classList.add('hidden');
+        document.getElementById('protocol-modal').classList.remove('flex');
+        document.getElementById('completion-modal').classList.add('hidden');
+        document.getElementById('completion-modal').classList.remove('flex');
+
+        document.getElementById('briefing-modal').classList.remove('hidden');
+        document.getElementById('briefing-modal').classList.add('flex');
+    };
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { clearHand(); }
+    });
+
+    window.toggleGuide = function() {
+        const guide = document.getElementById('morph-guide');
+        if(guide.classList.contains('hidden')) {
+            guide.classList.remove('hidden'); guide.classList.add('flex');
+        } else {
+            guide.classList.add('hidden'); guide.classList.remove('flex');
+        }
+    }
+
+    window.completeStep = function(stepId) {
+        if(!appState.subPhase.startsWith('p')) return;
+        appState.guided.completedSteps.add(stepId);
+        
+        let nextStep = currentSteps.find(s => !appState.guided.completedSteps.has(s.id));
+        if(nextStep) {
+            document.getElementById('guide-step-num').textContent = nextStep.id;
+            document.getElementById('guide-step-text').textContent = nextStep.msg;
+            
+            ['macro', 'prep', 'scope'].forEach(t => {
+                const tabBtn = document.getElementById(`tab-${t}`);
+                if (tabBtn) tabBtn.classList.remove('ring-2', 'ring-amber-400');
+            });
+            const activeTab = document.getElementById(`tab-${nextStep.tab}`);
+            if(activeTab) activeTab.classList.add('ring-2', 'ring-amber-400');
+
+        } else {
+            document.getElementById('guide-step-num').textContent = "✓";
+            document.getElementById('guide-step-text').textContent = "Protocol Complete.";
+            ['macro', 'prep', 'scope'].forEach(t => {
+                const tabBtn = document.getElementById(`tab-${t}`);
+                if (tabBtn) tabBtn.classList.remove('ring-2', 'ring-amber-400');
+            });
+        }
+        
+        const bar = document.getElementById('guided-bar');
+        bar.classList.remove('fade-in'); void bar.offsetWidth; bar.classList.add('fade-in');
+    };
+
+    function generateProceduralMacroscopic(isMold) {
+        const moldLayer = document.getElementById('svg-mold');
+        const yeastLayer = document.getElementById('svg-yeast');
+        
+        let moldHTML = `<svg class="absolute w-full h-full opacity-60" viewBox="0 0 100 100">`;
+        for(let i=0; i<40; i++) {
+            let startX = 30 + Math.random()*40; let startY = 30 + Math.random()*40;
+            let endX = startX + (Math.random()*60 - 30); let endY = startY + (Math.random()*60 - 30);
+            let ctrlX = startX + (Math.random()*40 - 20); let ctrlY = startY + (Math.random()*40 - 20);
+            moldHTML += `<path d="M${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY}" fill="none" stroke="#475569" stroke-width="${1 + Math.random()*2}" />`;
+            moldHTML += `<circle cx="${endX}" cy="${endY}" r="${2+Math.random()*4}" fill="#94a3b8" />`;
+        }
+        moldHTML += `</svg>`;
+        moldLayer.innerHTML = moldHTML;
+
+        let yeastHTML = `<svg class="absolute w-full h-full opacity-90" viewBox="0 0 100 100">`;
+        const centers = [{x:35, y:35, color:'#fcd34d'}, {x:65, y:45, color:'#fef08a'}, {x:45, y:70, color:'#fef9c3'}];
+        centers.forEach(c => {
+            for(let i=0; i<15; i++) {
+                let rx = c.x + (Math.random()*25 - 12.5);
+                let ry = c.y + (Math.random()*25 - 12.5);
+                yeastHTML += `<circle cx="${rx}" cy="${ry}" r="${3 + Math.random()*5}" fill="${c.color}" opacity="0.85" />`;
+            }
+        });
+        yeastHTML += `</svg>`;
+        yeastLayer.innerHTML = yeastHTML;
+    }
+
+    window.updateTemp = function(val) {
+        const display = document.getElementById('temp-display');
+        const bg = document.getElementById('incubator-bg');
+        const mold = document.getElementById('svg-mold');
+        const yeast = document.getElementById('svg-yeast');
+        const label = document.getElementById('phase-label');
+        
+        display.textContent = `${val}°C`;
+
+        if (val < 30) {
+            display.style.color = '#0ea5e9'; bg.style.backgroundColor = 'rgba(224, 242, 254, 0.4)';
+            label.textContent = "Saprobic (Mycelial) Phase";
+            label.className = "mt-4 text-[14px] font-bold text-sky-700 bg-sky-100 py-1.5 px-4 rounded-full inline-block border border-sky-200";
+            mold.style.opacity = '1'; yeast.style.opacity = '0';
+        } 
+        else if (val >= 30 && val < 35) {
+            display.style.color = '#8b5cf6'; bg.style.backgroundColor = 'rgba(245, 243, 255, 0.4)';
+            label.textContent = "Transition Phase";
+            label.className = "mt-4 text-[14px] font-bold text-purple-700 bg-purple-100 py-1.5 px-4 rounded-full inline-block border border-purple-200";
+            mold.style.opacity = '0.5'; yeast.style.opacity = '0.5';
+        }
+        else if (val >= 35) {
+            display.style.color = '#f97316'; bg.style.backgroundColor = 'rgba(255, 237, 213, 0.4)';
+            label.textContent = "Parasitic (Yeast) Phase";
+            label.className = "mt-4 text-[14px] font-bold text-orange-700 bg-orange-100 py-1.5 px-4 rounded-full inline-block border border-orange-200";
+            mold.style.opacity = '0'; yeast.style.opacity = '1';
+            
+            if(appState.subPhase === 'p1' && val >= 37 && !appState.guided.completedSteps.has(1)) { 
+                completeStep(1); 
+                UI.toast("Dimorphism confirmed. Switch to Slide Prep tab.", "success");
+            }
+        }
+    }
+
+    window.equip = function(item) {
+        if(appState.isBusy) return;
+        clearHand();
+        bench.tool = item;
+
+        document.querySelectorAll('.equip-btn').forEach(b => b.classList.remove('active-tool'));
+        document.querySelector(`[data-id="${item}"]`)?.classList.add('active-tool');
+        
+        document.getElementById('label-hand').innerHTML = item.toUpperCase();
+        ftElement.style.display = 'block';
+
+        if(item==='slide') ftElement.innerHTML = svgSlide; 
+        else if(item==='coverslip') ftElement.innerHTML = `<div class="w-10 h-10 border border-blue-400 bg-blue-100/50 transform rotate-12 filter drop-shadow-md"></div>`;
+        else if(item==='sample') ftElement.innerHTML = `<i class="fa-solid fa-vial-virus text-red-600 text-4xl filter drop-shadow-lg"></i>`; 
+        else if(item==='ink') ftElement.innerHTML = svgDropper('#111827'); 
+        else if(item==='lpcb') ftElement.innerHTML = svgDropper('#1e3a8a'); 
+
+        if(item==='slide' && !bench.s.present) document.getElementById('staining-tray').classList.add('drop-target-active'); 
+        else document.getElementById('staining-tray').classList.remove('drop-target-active');
+    };
+
+    window.clearHand = function() {
+        if(appState.isBusy) return;
+        bench.tool = null; document.getElementById('label-hand').innerHTML = 'Empty'; 
+        document.querySelectorAll('.equip-btn').forEach(b => b.classList.remove('active-tool'));
+        ftElement.style.display = 'none'; document.getElementById('staining-tray').classList.remove('drop-target-active');
+    };
+
+    window.clickTray = function() {
+        if(appState.isBusy || bench.s.cover) return;
+        
+        if(bench.tool === 'slide') {
+            if(bench.s.present) return;
+            bench.s.present=true; document.getElementById('slide-station').classList.remove('hidden'); document.getElementById('slide-station').classList.add('flex'); clearHand(); 
+            document.getElementById('label-smear').textContent = 'Clean Glass';
+            if(appState.subPhase.startsWith('p')) completeStep(appState.subPhase === 'p1' ? 3 : 1);
+            return;
+        }
+
+        if(!bench.s.present) { UI.toast("Place slide on bench first.", "error"); return; }
+
+        if(bench.tool === 'sample') { 
+            if(bench.s.sample) return;
+            bench.s.sample=true; 
+            document.getElementById('slide-drop-sample').style.opacity='1'; 
+            document.getElementById('label-smear').textContent='Specimen Added'; 
+            clearHand();
+            if(appState.subPhase.startsWith('p')) completeStep(appState.subPhase === 'p1' ? 4 : 2);
+        }
+        else if(bench.tool === 'ink' || bench.tool === 'lpcb') {
+            if(!bench.s.sample) { UI.toast("Apply specimen first.", "error"); return; }
+            animDropper(); 
+            bench.s.stain = bench.tool;
+            const dropId = bench.tool === 'ink' ? 'slide-drop-ink' : 'slide-drop-lpcb';
+            document.getElementById(dropId).style.opacity='1'; 
+            document.getElementById('label-smear').textContent='Stain Applied';
+            if(appState.subPhase.startsWith('p')) completeStep(appState.subPhase === 'p1' ? 5 : 3);
+        }
+        else if(bench.tool === 'coverslip') {
+            if(!bench.s.sample) { UI.toast("Apply specimen first.", "error"); return; }
+            if(!bench.s.stain) { UI.toast("Apply a diagnostic stain first.", "error"); return; }
+            
+            bench.s.cover = true;
+            document.getElementById('slide-coverslip').style.opacity = '1';
+            document.getElementById('label-smear').textContent = 'Sealed Wet Mount';
+            clearHand();
+            
+            let isUnknown = !appState.subPhase.startsWith('p');
+            if(isUnknown) {
+                const expectStain = TARGETS[appState.subPhase].expectedStain;
+                appState[appState.subPhase].prepDone = true;
+                if(bench.s.stain === expectStain) {
+                    appState[appState.subPhase].prepMethodCorrect = true;
+                    UI.toast("Preparation Protocol Complete.", "success");
+                } else {
+                    appState[appState.subPhase].prepMethodCorrect = false;
+                    UI.toast("Protocol Deviation: Incorrect stain utilized for this specimen.", "error");
+                }
+            } else {
+                UI.toast("Wet Mount Preparation Complete.", "success");
+                completeStep(appState.subPhase === 'p1' ? 6 : 4);
+            }
+        }
+    };
+
+    window.applyOil = function() {
+        if(appState.isBusy) return;
+        micro.oil = true; document.getElementById('oil-status-badge').className="font-mono text-[#34c759] font-bold text-[10px] bg-[#34c759]/10 px-2 py-1 rounded"; document.getElementById('oil-status-badge').textContent="Oil Applied"; renderScope(); 
+    };
+
+    document.addEventListener('mousemove', (e) => {
+      if(ftElement.style.display === 'block') {
+        let offsetX = -16, offsetY = -105; 
+        if (bench.tool === 'slide') { offsetX = -40; offsetY = -20; }
+        else if (bench.tool === 'coverslip') { offsetX = -20; offsetY = -20; }
+        else if (bench.tool === 'sample') { offsetX = -20; offsetY = -30; }
+        ftElement.style.left = (e.clientX + offsetX) + 'px'; ftElement.style.top = (e.clientY + offsetY) + 'px';
+      }
+    });
+
+    function animDropper() {
+      const p = ftElement.querySelector('.plunger-btn'); const drop = ftElement.querySelector('.anim-drop');
+      if(p) { p.style.transform = 'translateY(6px)'; p.style.transition = 'transform 0.1s ease'; setTimeout(() => p.style.transform = 'none', 150); }
+      if(drop) { drop.classList.remove('anim-drop'); void drop.offsetWidth; drop.classList.add('anim-drop'); }
+    }
+
+    // --- PROCEDURAL MICROSCOPE ENGINE ---
+    let stageX = 0, stageY = 0, isDrag = false, lastM = {x:0, y:0};
+
+    function generateOrganicPath(numPoints, segmentLength) {
+        let path = [];
+        let curX = (Math.random()-0.5)*800;
+        let curY = (Math.random()-0.5)*800;
+        let angle = Math.random() * Math.PI * 2;
+        path.push({x: curX, y: curY});
+        for(let i=0; i<numPoints; i++) {
+            angle += (Math.random() - 0.5) * 1.2;
+            curX += Math.cos(angle) * segmentLength;
+            curY += Math.sin(angle) * segmentLength;
+            path.push({x: curX, y: curY});
+        }
+        return path;
+    }
+
+    function initMicroscopeData() {
+        fungiData = [];
+        bgFungiData = [];
+        inkArtifacts = [];
+        const type = TARGETS[appState.subPhase].expectedId;
+        
+        // India Ink procedural polygon artifacts with Brownian vectors
+        for(let i=0; i<400; i++) {
+            let pts = [];
+            let sides = 3 + Math.floor(Math.random()*4);
+            for(let s=0; s<sides; s++) {
+                let ang = (s/sides)*Math.PI*2;
+                let rad = 0.5 + Math.random()*2.5;
+                pts.push({x: Math.cos(ang)*rad, y: Math.sin(ang)*rad});
+            }
+            inkArtifacts.push({ 
+                x: (Math.random()-0.5)*1200, 
+                y: (Math.random()-0.5)*1200, 
+                op: 0.3 + Math.random()*0.7,
+                dx: (Math.random()-0.5)*0.15,
+                dy: (Math.random()-0.5)*0.15,
+                pts: pts
+            });
+        }
+
+        const buildFungiSet = (arr, isBg) => {
+            let mult = isBg ? 1.5 : 1;
+            
+            if (type === 'septate') {
+                for(let i=0; i<12 * mult; i++) arr.push({type: 'septate', path: generateOrganicPath(12, 40)});
+            } 
+            else if (type === 'nonseptate') {
+                for(let i=0; i<10 * mult; i++) arr.push({type: 'nonseptate', path: generateOrganicPath(8, 60)});
+            }
+            else if (type === 'budding') {
+                for(let i=0; i<30 * mult; i++) {
+                    arr.push({type: 'budding', x: (Math.random()-0.5)*800, y: (Math.random()-0.5)*800, r: 8+Math.random()*4, rot: Math.random()*Math.PI*2});
+                }
+            }
+            else if (type === 'pseudohyphae') {
+                for(let i=0; i<12 * mult; i++) {
+                    let chain = []; let lx = (Math.random()-0.5)*800; let ly = (Math.random()-0.5)*800; let lrot = Math.random()*Math.PI*2;
+                    for(let j=0; j<6; j++) {
+                        chain.push({x: lx, y: ly, rot: lrot, ry: 12+Math.random()*4, rx: 6+Math.random()*2});
+                        lx += Math.cos(lrot)*22; ly += Math.sin(lrot)*22;
+                        lrot += (Math.random()*0.6 - 0.3);
+                    }
+                    arr.push({type: 'pseudohyphae', chain: chain});
+                }
+            }
+            else if (type === 'crypto') {
+                for(let i=0; i<18 * mult; i++) {
+                    arr.push({type: 'crypto', x: (Math.random()-0.5)*800, y: (Math.random()-0.5)*800, r: 12+Math.random()*6});
+                }
+            }
+        };
+
+        buildFungiSet(fungiData, false);
+        buildFungiSet(bgFungiData, true);
+    }
+
+    function scopeLoop() {
+        if(document.getElementById('view-scope').classList.contains('hidden')) return;
+        renderScope();
+        scopeAnimId = requestAnimationFrame(scopeLoop);
+    }
+
+    window.startDrag = function(e) { 
+        isDrag = true; 
+        lastM = {x: e.touches ? e.touches[0].clientX : e.clientX, y: e.touches ? e.touches[0].clientY : e.clientY}; 
+    };
+    window.dragStage = function(e) { 
+        if(!isDrag) return; 
+        if(e.cancelable) e.preventDefault();
+        const curX = e.touches ? e.touches[0].clientX : e.clientX;
+        const curY = e.touches ? e.touches[0].clientY : e.clientY;
+        stageX += (curX - lastM.x); stageY += (curY - lastM.y); lastM = {x:curX, y:curY}; 
+    };
+    window.stopDrag = function() { isDrag = false; };
+    const cvs = document.getElementById('scope-viewport-bg');
+    cvs.addEventListener('mousedown', startDrag); cvs.addEventListener('mousemove', dragStage); cvs.addEventListener('mouseup', stopDrag); cvs.addEventListener('mouseleave', stopDrag);
+    cvs.addEventListener('touchstart', startDrag, {passive:false}); cvs.addEventListener('touchmove', dragStage, {passive:false}); cvs.addEventListener('touchend', stopDrag);
+
+    window.setLens = function(mag) {
+      micro.mag = mag;
+      document.querySelectorAll('.lens-btn').forEach(b => {
+        b.className = `lens-btn flex-1 py-2 text-[12px] font-bold rounded-lg transition ${parseInt(b.dataset.mag) === micro.mag ? 'bg-white text-apple-text shadow-sm border border-gray-300' : 'text-[#86868b] hover:text-apple-text border border-transparent'}`;
+      });
+    };
+
+    document.getElementById('micro-coarse-slider').addEventListener('input', (e) => { micro.focusC = parseInt(e.target.value); });
+    document.getElementById('micro-fine-slider').addEventListener('input', (e) => { micro.focusF = parseInt(e.target.value); });
+
+    function drawFungi(ctx, f, mag) {
+        ctx.save();
+        if(mag < 40) {
+            ctx.fillStyle = '#1e3a8a'; ctx.beginPath(); ctx.arc(f.path ? f.path[0].x : f.x, f.path ? f.path[0].y : f.y, 6, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+            return;
+        }
+
+        if (f.type === 'septate') {
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = mag < 100 ? 6 : 14; 
+            ctx.beginPath(); ctx.moveTo(f.path[0].x, f.path[0].y);
+            for(let i=1; i<f.path.length-1; i++) { 
+                let xc = (f.path[i].x + f.path[i+1].x) / 2;
+                let yc = (f.path[i].y + f.path[i+1].y) / 2;
+                ctx.quadraticCurveTo(f.path[i].x, f.path[i].y, xc, yc);
+            }
+            ctx.stroke();
+            ctx.strokeStyle = '#93c5fd'; ctx.lineWidth = mag < 100 ? 4 : 8; ctx.stroke();
+            
+            // Septa Lines and Vacuoles
+            if(mag >= 40) {
+                ctx.strokeStyle = '#172554'; ctx.lineWidth = mag < 100 ? 1 : 2.5;
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                for(let i=1; i<f.path.length-1; i+=2) {
+                    let dx = f.path[i+1].x - f.path[i-1].x; let dy = f.path[i+1].y - f.path[i-1].y;
+                    let len = Math.sqrt(dx*dx + dy*dy); let nx = -dy/len; let ny = dx/len;
+                    let width = mag < 100 ? 3 : 6.5;
+                    
+                    ctx.beginPath(); 
+                    ctx.moveTo(f.path[i].x + nx*width, f.path[i].y + ny*width); 
+                    ctx.lineTo(f.path[i].x - nx*width, f.path[i].y - ny*width); 
+                    ctx.stroke();
+                    
+                    // Deterministic Vacuole Generation based on coordinates
+                    if (Math.abs(Math.sin(f.path[i].x * f.path[i].y)) > 0.4) {
+                        ctx.beginPath();
+                        ctx.arc(f.path[i].x + (nx*2), f.path[i].y - (ny*2), mag < 100 ? 1 : 1.5, 0, Math.PI*2);
+                        ctx.fill();
+                    }
+                }
+            }
+        } 
+        else if (f.type === 'nonseptate') {
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = mag < 100 ? 8 : 18; 
+            ctx.beginPath(); ctx.moveTo(f.path[0].x, f.path[0].y);
+            for(let i=1; i<f.path.length-1; i++) { 
+                let xc = (f.path[i].x + f.path[i+1].x) / 2;
+                let yc = (f.path[i].y + f.path[i+1].y) / 2;
+                
+                // Introduce biological irregularity to nonseptate walls
+                let offX = Math.sin(i) * 2;
+                ctx.quadraticCurveTo(f.path[i].x + offX, f.path[i].y, xc, yc);
+            }
+            ctx.stroke();
+            ctx.strokeStyle = '#93c5fd'; ctx.lineWidth = mag < 100 ? 5 : 12; ctx.stroke();
+        }
+        else if (f.type === 'budding') {
+            ctx.translate(f.x, f.y); ctx.rotate(f.rot);
+            let grad = ctx.createRadialGradient(-f.r*0.2, -f.r*0.2, f.r*0.2, 0, 0, f.r);
+            grad.addColorStop(0, '#93c5fd'); grad.addColorStop(0.6, '#3b82f6'); grad.addColorStop(1, '#1e3a8a');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.ellipse(0,0, f.r*0.8, f.r, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(0, -f.r*0.9, f.r*0.4, f.r*0.5, 0, 0, Math.PI*2); ctx.fill(); 
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.beginPath(); ctx.arc(0, f.r*0.3, f.r*0.3, 0, Math.PI*2); ctx.fill();
+        }
+        else if (f.type === 'pseudohyphae') {
+            f.chain.forEach(c => {
+                ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot);
+                let grad = ctx.createRadialGradient(0, 0, c.rx*0.2, 0, 0, c.ry);
+                grad.addColorStop(0, '#93c5fd'); grad.addColorStop(0.7, '#3b82f6'); grad.addColorStop(1, '#1e3a8a');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.ellipse(0,0, c.rx, c.ry, 0, 0, Math.PI*2); ctx.fill();
+                ctx.restore();
+            });
+        }
+        else if (f.type === 'crypto') {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 2.8, 0, Math.PI*2); ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 2.8, 0, Math.PI*2); ctx.stroke();
+
+            let grad = ctx.createRadialGradient(f.x-f.r*0.3, f.y-f.r*0.3, f.r*0.1, f.x, f.y, f.r);
+            grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.4, '#d1d5db'); grad.addColorStop(1, '#374151');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
+            
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath(); ctx.arc(f.x+f.r*0.2, f.y+f.r*0.2, f.r*0.3, 0, Math.PI*2); ctx.fill();
+            
+            if (Math.abs(Math.sin(f.x)) > 0.5) {
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.beginPath(); ctx.arc(f.x-f.r*0.2, f.y+f.r*0.1, f.r*0.2, 0, Math.PI*2); ctx.fill();
+            }
+        }
+        ctx.restore();
+    }
+
+    function renderScope() {
+        const bg = document.getElementById('scope-viewport-bg');
+        const cvs = document.getElementById('microscope-canvas');
+        const ctx = cvs.getContext('2d');
+        const fb = document.getElementById('micro-result-eval'); 
+        const sub = document.getElementById('scope-submit-area');
+
+        let isUnknown = !appState.subPhase.startsWith('p');
+
+        if(!bench.s.cover) { 
+            if(!isUnknown) {
+                fb.classList.remove('hidden'); fb.className="mt-6 w-full max-w-lg p-5 rounded-xl border border-gray-200 bg-[#f5f5f7] text-[#86868b] text-[14px]"; fb.innerHTML = "Wet mount not sealed. Complete slide prep protocol."; return; 
+            }
+        }
+
+        let baseDev = Math.abs(micro.focusC - 50) * 0.8 + Math.abs(micro.focusF - 50) * 0.15;
+        let blurAmt = 0;
+        if (micro.mag === 10) blurAmt = baseDev * 0.05; 
+        else if (micro.mag === 40) blurAmt = baseDev * 0.15;
+        else blurAmt = baseDev; 
+
+        if(micro.mag === 100 && !micro.oil) blurAmt += 8; 
+        if(micro.mag < 100 && micro.oil) blurAmt += 4;
+        
+        cvs.style.filter = `blur(${blurAmt.toFixed(1)}px)`;
+        cvs.style.opacity = '1';
+        ctx.clearRect(0,0,550,550);
+
+        const stain = bench.s.stain;
+
+        if (stain === 'ink') {
+            bg.style.backgroundColor = '#111111';
+            inkArtifacts.forEach(a => {
+                a.x += a.dx; a.y += a.dy; // Brownian drift
+                if(Math.random() < 0.02) { a.dx = (Math.random()-0.5)*0.2; a.dy = (Math.random()-0.5)*0.2; }
+                
+                ctx.fillStyle = `rgba(180,180,180,${a.op})`;
+                ctx.beginPath();
+                let ax = 275 + (a.x+stageX)*(micro.mag/40);
+                let ay = 275 + (a.y+stageY)*(micro.mag/40);
+                
+                ctx.moveTo(ax + a.pts[0].x*(micro.mag/40), ay + a.pts[0].y*(micro.mag/40));
+                for(let p=1; p<a.pts.length; p++) {
+                    ctx.lineTo(ax + a.pts[p].x*(micro.mag/40), ay + a.pts[p].y*(micro.mag/40));
+                }
+                ctx.fill();
+            });
+        } else if (stain === 'lpcb') {
+            bg.style.backgroundColor = '#e0f2fe'; 
+        } else {
+            bg.style.backgroundColor = '#f8fafc'; 
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
+            ctx.beginPath(); ctx.arc(275, 275, 50, 0, Math.PI*2); ctx.fill();
+            if(!isUnknown) {
+                fb.classList.remove('hidden'); fb.className="mt-6 w-full max-w-lg p-5 rounded-xl border border-[#ff3b30]/20 bg-[#fef2f2] text-[#991b1b] text-[14px]"; fb.innerHTML = "Error: Diagnostic Stain Missing. Contrast is too low to observe structures."; return;
+            }
+        }
+
+        let visualScale = micro.mag === 10 ? 0.4 : (micro.mag === 40 ? 1.0 : 2.5);
+        ctx.save(); ctx.translate(275, 275); ctx.scale(visualScale, visualScale); ctx.translate(stageX, stageY);
+
+        // Z-Axis Depth Array (Out of focus background elements)
+        ctx.save();
+        ctx.filter = 'blur(6px)';
+        ctx.globalAlpha = 0.4;
+        bgFungiData.forEach(f => drawFungi(ctx, f, micro.mag));
+        ctx.restore();
+
+        // Primary focal plane array
+        fungiData.forEach(f => drawFungi(ctx, f, micro.mag));
+        
+        ctx.restore(); // Clear viewport transforms
+
+        // Microscope Condenser Lens Illumination Vignette
+        let lumGrad = ctx.createRadialGradient(275, 275, 50, 275, 275, 290);
+        lumGrad.addColorStop(0, 'rgba(255,255,255,0)');
+        lumGrad.addColorStop(0.6, 'rgba(0,0,0,0.08)');
+        lumGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
+        ctx.fillStyle = lumGrad;
+        ctx.fillRect(0, 0, 550, 550);
+
+        let phaseDone = false;
+        if(appState.subPhase.startsWith('p')) phaseDone = appState.guided[appState.subPhase + 'Done'];
+        else phaseDone = appState[appState.subPhase].idDone;
+
+        if(micro.mag === 100 && micro.oil && blurAmt < 3.0) { 
+            if(appState.subPhase.startsWith('p')) completeStep(appState.subPhase === 'p1' ? 7 : 5);
+            if(!phaseDone) fb.classList.add('hidden'); 
+            sub.classList.remove('hidden');
+        } else { 
+            if(!phaseDone) {
+                fb.classList.add('hidden'); 
+                sub.classList.add('hidden'); 
+            }
+        }
+    }
+
+    window.verifyFungi = function() {
+        const type = document.getElementById('sel-fungi-type').value;
+        if(!type) { UI.toast("Select a morphological structure.", "error"); return; }
+
+        let isUnknown = !appState.subPhase.startsWith('p');
+        const expected = TARGETS[appState.subPhase].expectedId;
+        const fb = document.getElementById('micro-result-eval'); 
+
+        if(isUnknown) {
+            appState[appState.subPhase].idAnsCorrect = (type === expected);
+            appState[appState.subPhase].idDone = true;
+            appState[appState.subPhase].idSub = type;
+
+            const btn = document.getElementById('btn-fungi-log');
+            btn.textContent = "Diagnosis Logged"; btn.disabled = true;
+            btn.classList.replace('bg-[#0071e3]', 'bg-[#34c759]');
+            
+            document.getElementById('sel-fungi-type').disabled = true;
+            UI.toast("Microscopic Diagnosis Logged.", "success");
+            
+            checkUnknownsCompletion();
+        } else {
+            if(type === expected) {
+                fb.classList.add('hidden');
+                appState.guided[appState.subPhase + 'Done'] = true;
+                
+                let explanation = "";
+                if(type === 'septate') explanation = "Distinct cross-walls observed in filamentous hyphae.";
+                if(type === 'nonseptate') explanation = "Continuous, broad filamentous tubes lacking cross-walls.";
+                if(type === 'budding') explanation = "Single spherical/oval cells exhibiting budding reproduction.";
+                if(type === 'pseudohyphae') explanation = "Chains of elongated yeast cells remaining attached after budding.";
+                if(type === 'crypto') explanation = "Thick, clear capsule halo visible against India Ink background.";
+                
+                const btn = document.getElementById('btn-fungi-log');
+                btn.textContent = "Verified"; btn.disabled = true;
+                btn.classList.replace('bg-[#0071e3]', 'bg-[#34c759]');
+                
+                const successArea = document.getElementById('scope-success-area');
+                successArea.innerHTML = `
+                    <div class="p-4 rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] text-[#166534] text-[13px] shadow-sm flex flex-col gap-3">
+                        <strong>Correct Identification!</strong>
+                        <span>${explanation}</span>
+                        <button onclick="handleGuidedNext()" class="w-full bg-[#166534] hover:bg-[#15803d] text-white py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 mt-1">
+                            Proceed <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                `;
+                successArea.classList.remove('hidden');
+            } else {
+                fb.classList.remove('hidden');
+                fb.className = "mt-4 p-4 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-[#991b1b] text-[13px] shadow-sm flex-col"; 
+                fb.innerHTML = `<strong>Incorrect.</strong> Check the Morphology Guide for reference.`; 
+            }
+        }
+    };
+
+    window.handleGuidedNext = function() {
+        if(appState.subPhase === 'p1') {
+            document.getElementById('completion-modal').classList.remove('hidden');
+            document.getElementById('completion-modal').classList.add('flex');
+            document.getElementById('comp-modal-title').textContent = "Protocol A Complete";
+            document.getElementById('comp-modal-desc').textContent = "Thermal dimorphism and LPCB wet mount evaluated.";
+            document.getElementById('comp-modal-actions').innerHTML = `<button onclick="startPracticePhase('p2')" class="apple-btn w-full py-3.5 text-[14px] shadow-sm flex items-center gap-2">Load Protocol B (India Ink) <i class="fa-solid fa-arrow-right"></i></button>`;
+        } else if (appState.subPhase === 'p2') {
+            document.getElementById('completion-modal').classList.remove('hidden');
+            document.getElementById('completion-modal').classList.add('flex');
+            document.getElementById('comp-modal-title').textContent = "Guided Protocols Complete";
+            document.getElementById('comp-modal-desc').textContent = "You are ready for the assessment.";
+            document.getElementById('comp-modal-actions').innerHTML = `<button onclick="startExamPrompt()" class="apple-btn w-full py-3.5 text-[14px] shadow-sm flex items-center gap-2">Proceed to Assessment <i class="fa-solid fa-arrow-right"></i></button>`;
+        }
+    }
+
+    function checkUnknownsCompletion() {
+        if(appState.u1.idDone && appState.subPhase === 'u1') {
+            document.getElementById('completion-modal').classList.remove('hidden');
+            document.getElementById('completion-modal').classList.add('flex');
+            document.getElementById('comp-modal-title').textContent = "Patient A Complete";
+            document.getElementById('comp-modal-desc').textContent = "Diagnostic results logged.";
+            document.getElementById('comp-modal-actions').innerHTML = `<button onclick="document.getElementById('completion-modal').classList.add('hidden'); appState.subPhase = 'hub'; document.getElementById('btn-u2').disabled = false; document.getElementById('btn-u2').className = 'apple-btn px-8 py-4 flex items-center justify-center gap-3 text-[15px] shadow-lg'; startUnknown('u2');" class="apple-btn w-full py-3.5 text-[14px] shadow-sm flex items-center gap-2">Load Patient B <i class="fa-solid fa-arrow-right"></i></button>`;
+        } else if (appState.u2.idDone && appState.subPhase === 'u2') {
+            document.getElementById('completion-modal').classList.remove('hidden');
+            document.getElementById('completion-modal').classList.add('flex');
+            document.getElementById('comp-modal-title').textContent = "Independent Practicum Complete";
+            document.getElementById('comp-modal-desc').textContent = "All unknowns successfully evaluated.";
+            document.getElementById('comp-modal-actions').innerHTML = `<button onclick="document.getElementById('completion-modal').classList.add('hidden'); setPhase(4);" class="apple-btn w-full py-3.5 text-[14px] shadow-sm flex items-center gap-2">Generate LIMS Report <i class="fa-solid fa-file-pdf"></i></button>`;
+        }
+    }
+
+    window.showBenchTab = function(tab) {
+      if(appState.subPhase === 'p1' && tab === 'prep' && !appState.guided.completedSteps.has(2) && !appState.guided.completedSteps.has(1)) {
+          UI.toast("Complete Thermal Dimorphism evaluation first.", "error"); return;
+      }
+      
+      clearHand();
+      if(scopeAnimId) { cancelAnimationFrame(scopeAnimId); scopeAnimId = null; }
+
+      document.querySelectorAll('.bench-view').forEach(el => el.classList.replace('flex', 'hidden'));
+      document.getElementById(`view-${tab}`).classList.replace('hidden', 'flex');
+      
+      if(appState.subPhase.startsWith('p')) {
+          if(appState.subPhase === 'p1' && tab === 'prep' && appState.guided.completedSteps.has(1) && !appState.guided.completedSteps.has(2)) {
+              completeStep(2);
+          }
+      }
+
+      ['macro', 'prep', 'scope'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if(btn) btn.className = `flex-1 py-2.5 px-3 rounded-[10px] text-[13px] transition-all flex items-center justify-center ${t === tab ? 'font-semibold bg-white text-apple-text shadow-sm' : 'font-medium text-[#86868b] hover:text-apple-text'}`;
+      });
+      if(tab === 'scope') { 
+          renderScope(); 
+          scopeLoop(); 
+      }
+    };
+
+    window.setPhase = function(p) {
+      appState.phase = p;
+      [1,2,3,4].forEach(n => { 
+          const el = document.getElementById(`nav-${n}`);
+          if(el) el.className = `px-5 py-2 rounded-full text-[11px] font-bold transition ${p === n ? 'bg-[#0071e3] text-white shadow-sm' : 'text-[#86868b]'}`; 
+      });
+
+      ['module-bench', 'module-quiz', 'module-unknowns-hub', 'module-report'].forEach(id => {
+          document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex', 'block');
+      });
+
+      if (p === 1 || p === 3) {
+          document.getElementById('guided-bar').style.display = (p === 1) ? 'block' : 'none';
+          if(p === 3 && appState.subPhase === 'hub') {
+              document.getElementById('module-unknowns-hub').classList.remove('hidden'); document.getElementById('module-unknowns-hub').classList.add('flex');
+          } else {
+              document.getElementById('module-bench').classList.remove('hidden'); document.getElementById('module-bench').classList.add('flex');
+          }
+      } 
+      else if (p === 2) {
+          document.getElementById('guided-bar').style.display = 'none';
+          document.getElementById('module-quiz').classList.remove('hidden'); document.getElementById('module-quiz').classList.add('flex');
+      } 
+      else if (p === 4) {
+          document.getElementById('guided-bar').style.display = 'none';
+          document.getElementById('module-report').classList.remove('hidden'); document.getElementById('module-report').classList.add('block');
+          generateReportData();
+      }
+    };
+
+    window.loginStudent = function() {
+      const n = document.getElementById('stu-name').value; const i = document.getElementById('stu-id').value;
+      if(!n || !i) { UI.toast("Credentials required.", "error"); return; }
+      appState.stuName = n; appState.stuId = i;
+
+      document.getElementById('briefing-modal').classList.add('hidden'); document.getElementById('briefing-modal').classList.remove('flex');
+      const appWrap = document.getElementById('app-wrapper');
+      appWrap.classList.remove('hidden'); appWrap.classList.add('flex'); appWrap.style.opacity = '1';
+      setPhase(2);
+    };
+
+    window.submitQuiz = function() {
+      let c = 0; appState.quizAnswers = {};
+      const getAns = (q) => { const val = document.querySelector(`input[name="${q}"]:checked`)?.value; appState.quizAnswers[q] = val || 'unanswered'; return val; };
+
+      if(getAns('q1') === 'b') c++; if(getAns('q2') === 'b') c++; if(getAns('q3') === 'a') c++;
+      if(getAns('q4') === 'b') c++; if(getAns('q5') === 'a') c++; if(getAns('q6') === 'b') c++;
+      
+      appState.quizScore = Math.round((c/6)*100); appState.subPhase = 'hub'; setPhase(3);
+    };
+
+    window.startUnknown = function(id) {
+      appState.subPhase = id; resetBench(id);
+      document.getElementById('module-unknowns-hub').classList.add('hidden'); document.getElementById('module-unknowns-hub').classList.remove('flex');
+      document.getElementById('module-bench').classList.remove('hidden'); document.getElementById('module-bench').classList.add('flex');
+      document.getElementById('tab-macro').classList.add('hidden'); 
+      showBenchTab('prep');
+    };
+
+    window.resetCurrentProtocol = function() {
+      if(appState.isBusy) return;
+      if(appState.phase === 1 || appState.phase === 3) {
+        resetBench(appState.subPhase);
+        UI.toast("Protocol Reset Successfully.", "info");
+      }
+    };
+
+    function resetBench(phaseId) {
+      let isUnknown = !phaseId.startsWith('p');
+      bench = { tool: null, isDrying: false, s: { present: false, sample: false, stain: null, cover: false } };
+      currentSteps = getSteps(phaseId);
+      
+      if(scopeAnimId) { cancelAnimationFrame(scopeAnimId); scopeAnimId = null; }
+
+      document.getElementById('staining-tray').classList.remove('drop-target-active');
+      document.getElementById('slide-station').classList.add('hidden'); document.getElementById('slide-station').classList.remove('flex');
+      
+      document.getElementById('slide-drop-sample').style.opacity = '0';
+      document.getElementById('slide-drop-lpcb').style.opacity = '0';
+      document.getElementById('slide-drop-ink').style.opacity = '0';
+      document.getElementById('slide-coverslip').style.opacity = '0';
+      
+      clearHand();
+      document.getElementById('label-smear').textContent = 'None'; document.getElementById('label-smear').className = 'text-[#1d1d1f] font-mono font-bold ml-1';
+      
+      initMicroscopeData();
+      micro = { mag: 10, focusC: 10, focusF: 85, oil: false, currentTargetIndex: 0 };
+      stageX = 0; stageY = 0;
+      document.getElementById('oil-status-badge').className = "font-mono text-[#ff3b30] font-bold text-[10px] bg-[#ff3b30]/10 px-2 py-1 rounded"; document.getElementById('oil-status-badge').textContent = "Dry Lens";
+      document.getElementById('micro-result-eval').classList.add('hidden');
+      
+      document.querySelectorAll('.lens-btn').forEach(b => { b.className = `lens-btn flex-1 py-2 text-[12px] font-bold rounded-lg transition ${parseInt(b.dataset.mag) === 10 ? 'bg-white text-apple-text shadow-sm border border-gray-300' : 'text-[#86868b] hover:text-apple-text border border-transparent'}`; });
+      document.getElementById('micro-coarse-slider').value = 10; document.getElementById('micro-fine-slider').value = 85;
+
+      const selType = document.getElementById('sel-fungi-type');
+      selType.value = ""; selType.disabled = false;
+      const btnLog = document.getElementById('btn-fungi-log');
+      btnLog.textContent = "Submit Diagnosis"; btnLog.disabled = false;
+      btnLog.classList.remove('bg-[#34c759]'); btnLog.classList.add('bg-[#0071e3]', 'hover:bg-[#0077ed]');
+      
+      const successArea = document.getElementById('scope-success-area');
+      if (successArea) {
+          successArea.classList.add('hidden');
+          successArea.innerHTML = '';
+      }
+      
+      document.getElementById('morph-guide').classList.add('hidden');
+      document.getElementById('morph-guide').classList.remove('flex');
+
+      appState.guided.completedSteps.clear();
+      
+      if(!isUnknown) { 
+        document.getElementById('guide-step-num').textContent = currentSteps[0].id; 
+        document.getElementById('guide-step-text').textContent = currentSteps[0].msg;
+        
+        if (phaseId === 'p2') {
+            document.getElementById('macro-blocker').classList.remove('hidden'); document.getElementById('macro-blocker').classList.add('flex');
+            document.getElementById('lbl-sample-type').textContent = "Patient CSF";
+            document.getElementById('tab-macro').classList.add('hidden');
+            showBenchTab('prep');
+        } else {
+            document.getElementById('macro-blocker').classList.add('hidden'); document.getElementById('macro-blocker').classList.remove('flex');
+            document.getElementById('lbl-sample-type').textContent = "Patient Specimen";
+            document.getElementById('tab-macro').classList.remove('hidden');
+            generateProceduralMacroscopic(true);
+            document.getElementById('temp-slider').value = 25;
+            updateTemp(25);
+            showBenchTab('macro');
+        }
+      } else {
+          document.getElementById('lbl-sample-type').textContent = "Patient Swab";
+      }
+    }
+
+    function generateReportData() {
+      document.getElementById('rep-name-out').textContent = appState.stuName; document.getElementById('rep-id-out').textContent = appState.stuId;
+      document.getElementById('rep-quiz-out').textContent = appState.quizScore + "%";
+      
+      const sHtml = (done) => done ? '<span class="text-[#34c759] font-bold">Completed</span>' : '<span class="text-[#ff3b30] font-bold">Incomplete</span>';
+      document.getElementById('rep-g-p1').innerHTML = sHtml(appState.guided.p1Done); document.getElementById('rep-g-p2').innerHTML = sHtml(appState.guided.p2Done);
+
+      const qKey = [
+        { id:'q1', ans:'b', text:"1. Parasitic yeast temperature condition" },
+        { id:'q2', ans:'b', text:"2. India ink purpose" },
+        { id:'q3', ans:'a', text:"3. Macroscopic colony differences" },
+        { id:'q4', ans:'b', text:"4. Septate vs nonseptate features" },
+        { id:'q5', ans:'a', text:"5. Immersion oil objective" },
+        { id:'q6', ans:'b', text:"6. Pseudohyphae morphology" }
+      ];
+      let qHtml = '';
+      qKey.forEach(q => {
+          const uAns = appState.quizAnswers[q.id] || 'unanswered';
+          const isCorrect = uAns === q.ans;
+          const icon = isCorrect ? '<i class="fa-solid fa-check text-[#34c759]"></i>' : '<i class="fa-solid fa-xmark text-[#ff3b30]"></i>';
+          qHtml += `<div class="mb-3 pb-3 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0">
+              <div class="flex justify-between items-start">
+                  <span class="text-[13px] font-medium text-apple-text">${q.text}</span>
+                  <span class="ml-4">${icon}</span>
+              </div>
+              ${!isCorrect ? `<div class="text-[11px] text-[#ff3b30] mt-1 font-mono">Your input: ${uAns.toUpperCase()} | Correct Answer: ${q.ans.toUpperCase()}</div>` : ''}
+          </div>`;
+      });
+      document.getElementById('rep-quiz-details').innerHTML = qHtml;
+      document.getElementById('print-quiz-details').innerHTML = qHtml.replace(/text-\[#34c759\]/g, 'style="color:#166534;"').replace(/text-\[#ff3b30\]/g, 'style="color:#991b1b;"');
+
+      const buildPrepDetails = (uId) => {
+            const u = appState[uId];
+            if(!u.prepDone) return '<div class="text-gray-400 italic text-[12px]">No data recorded.</div>';
+            const methodText = u.prepMethodCorrect ? '<span class="text-[#34c759] font-bold">Pass</span>' : '<span class="text-[#ff3b30] font-bold">Fail (Stain Mismatch)</span>';
+            return `<div class="mb-2"><strong class="text-apple-sec text-[12px]">Wet Mount Setup:</strong> ${methodText}</div>`;
+      };
+
+      const buildIdDetails = (uId) => {
+            const u = appState[uId];
+            if(!u.idDone) return '<div class="text-gray-400 italic text-[12px]">No data recorded.</div>';
+            const ansText = u.idAnsCorrect ? '<span class="text-[#34c759] font-bold">Correct</span>' : '<span class="text-[#ff3b30] font-bold">Incorrect</span>';
+            return `<div><strong class="text-apple-sec text-[12px]">Logged Diagnosis:</strong> <span class="capitalize font-mono">${u.idSub}</span><br><strong class="text-apple-sec text-[12px]">Accuracy:</strong> <span>${ansText} (Expected: <span class="capitalize font-mono">${TARGETS[uId].expectedId}</span>)</span></div>`;
+      };
+
+      ['u1', 'u2'].forEach(u => {
+          document.getElementById(`rep-${u}-prep`).innerHTML = buildPrepDetails(u); document.getElementById(`rep-${u}-id-det`).innerHTML = buildIdDetails(u);
+          const passed = appState[u].prepMethodCorrect && appState[u].idAnsCorrect;
+          document.getElementById(`rep-${u}-res`).textContent = passed ? "PASS" : "FAIL"; 
+          document.getElementById(`rep-${u}-res`).className = passed ? "px-3 py-1.5 rounded-md text-[13px] font-bold bg-[#34c759]/10 text-[#166534]" : "px-3 py-1.5 rounded-md text-[13px] font-bold bg-[#ff3b30]/10 text-[#991b1b]";
+          
+          document.getElementById(`p-${u}-prep`).innerHTML = buildPrepDetails(u); document.getElementById(`p-${u}-det`).innerHTML = buildIdDetails(u);
+          document.getElementById(`p-${u}-res`).innerHTML = passed ? "PASS" : "FAIL"; document.getElementById(`p-${u}-res`).style.color = passed ? "#166534" : "#991b1b";
+      });
+
+      document.getElementById('print-date').textContent = new Date().toLocaleDateString();
+      document.getElementById('p-name').textContent = appState.stuName; document.getElementById('p-id').textContent = appState.stuId; document.getElementById('p-quiz').textContent = appState.quizScore + "%";
+      document.getElementById('p-g-p1').innerHTML = sHtml(appState.guided.p1Done); document.getElementById('p-g-p2').innerHTML = sHtml(appState.guided.p2Done);
+    }
+  </script>
+</body>
+</html>
+```<FollowUp>
+<ElicitationsGroup>
+</ElicitationsGroup>
+</FollowUp>
